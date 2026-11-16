@@ -2,6 +2,10 @@
 
 A C++ raytracer built incrementally during the course, using TDD.
 
+[![CI](https://github.com/[ORG]/raytracing-live-demo-2026/actions/workflows/ci.yml/badge.svg)](https://github.com/[ORG]/raytracing-live-demo-2026/actions/workflows/ci.yml)
+
+Licence: [MIT](LICENSE) · [Contributing](CONTRIBUTING.md) · [Code of Conduct](CODE_OF_CONDUCT.md)
+
 ---
 
 ## Project structure
