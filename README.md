@@ -42,7 +42,27 @@ Prerequisites:
 
 ---
 
+## Common commands
+
+| Command | What it does |
+|---------|-------------|
+| `make build` | Configure + compile everything |
+| `make run` | Build then launch the raytracer |
+| `make test` | Build then run the test suite |
+| `make clean` | Delete the `build/` directory |
+
+`run` and `test` both depend on `build`, so they recompile automatically if sources have changed.
+
+---
+
 ## Building
+
+```bash
+make build
+```
+
+<details>
+<summary>Raw CMake (if you prefer)</summary>
 
 ```bash
 # Configure (only needed once, or after changing CMakeLists.txt)
@@ -51,13 +71,14 @@ cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
 # Build everything (main binary + test binary)
 cmake --build build
 ```
+</details>
 
 ---
 
 ## Running the Hello World demo
 
 ```bash
-./build/raytracer
+make run
 # Hello, Raytracer!
 ```
 
@@ -66,12 +87,17 @@ cmake --build build
 ## Running the tests
 
 ```bash
-# Run all tests via CTest
-ctest --test-dir build --output-on-failure
+make test
+```
 
-# Or run the test binary directly for more verbose output
+<details>
+<summary>More verbose output</summary>
+
+```bash
+# Run the test binary directly for Catch2's reporter
 ./build/tests --reporter compact
 ```
+</details>
 
 You should see:
 

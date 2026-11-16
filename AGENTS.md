@@ -4,18 +4,22 @@
 
 **Build:**
 ```
-cmake -S . -B build
-cmake --build build
+make build
 ```
 
 **Run:**
 ```
-./build/raytracer
+make run
 ```
 
 **Test:**
 ```
-cd build && ctest --output-on-failure
+make test
+```
+
+**Clean:**
+```
+make clean
 ```
 
 ## Architecture decisions
