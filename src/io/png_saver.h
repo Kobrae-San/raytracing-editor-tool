@@ -2,8 +2,8 @@
 
 #include "io/image_saver.h"
 
-// Saves an image as a PNG file to disk, using the LodePNG library.
+// Adapter: saves an Image as a PNG file, hiding LodePNG behind ImageSaver.
 class PngSaver : public ImageSaver {
 public:
-    void save(Image& image, const std::string& path) override;
+    void save(const Image& image, const std::string& path) const override;
 };

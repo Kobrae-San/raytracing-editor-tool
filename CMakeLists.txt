@@ -60,10 +60,11 @@ add_executable(tests
   tests/colour/test_colour.cpp
   tests/math/test_ray.cpp
   tests/image/test_image.cpp
+  tests/io/test_png_saver.cpp
   tests/render/test_camera.cpp
   tests/geometry/test_sphere.cpp)
 target_include_directories(tests PRIVATE tests)
-target_link_libraries(tests PRIVATE raytracer_core Catch2::Catch2WithMain)
+target_link_libraries(tests PRIVATE raytracer_core lodepng Catch2::Catch2WithMain)
 target_compile_options(tests PRIVATE ${RT_WARNINGS})
 
 include(CTest)

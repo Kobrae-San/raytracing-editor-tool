@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <vector>
 
 #include "colour/colour.h"
@@ -24,4 +25,7 @@ private:
     unsigned int _width;
     unsigned int _height;
     std::vector<Colour> _pixels;
+
+    // Pixels are stored row by row in one vector: the layout lives here only.
+    std::size_t index(unsigned int x, unsigned int y) const;
 };

@@ -4,11 +4,14 @@
 
 #include "image/image.h"
 
-// Interface for saving an image to some destination and format.
-// Concrete implementations (e.g. PngSaver) decide how and where.
+// Strategy interface for saving an image. Callers depend on "a saver", not on
+// a file format or a library, so adding a format (e.g. EXR) is one new class.
+//
+// Contract every implementation must keep (Liskov): write the whole image to
+// path, or throw std::runtime_error. The image is never modified.
 class ImageSaver {
 public:
     virtual ~ImageSaver() = default;
 
-    virtual void save(Image& image, const std::string& path) = 0;
+    virtual void save(const Image& image, const std::string& path) const = 0;
 };

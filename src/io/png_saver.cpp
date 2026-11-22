@@ -17,7 +17,7 @@ std::uint8_t toByte(double component) {
 
 }  // namespace
 
-void PngSaver::save(Image& image, const std::string& path) {
+void PngSaver::save(const Image& image, const std::string& path) const {
     // LodePNG expects one flat buffer of RGBA bytes, row by row from the
     // top, which matches how Image already stores its pixels.
     std::vector<unsigned char> pixels(static_cast<std::size_t>(image.width()) * image.height() * 4);
