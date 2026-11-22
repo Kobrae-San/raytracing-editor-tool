@@ -2,7 +2,7 @@
 
 A C++ raytracer built incrementally during the course, using TDD.
 
-[![CI](https://github.com/[ORG]/raytracing-live-demo-2026/actions/workflows/ci.yml/badge.svg)](https://github.com/[ORG]/raytracing-live-demo-2026/actions/workflows/ci.yml)
+[![CI](https://github.com/glassworks/raytracing-live-demo-2026/actions/workflows/ci.yml/badge.svg)](https://github.com/glassworks/raytracing-live-demo-2026/actions/workflows/ci.yml)
 
 Licence: [MIT](LICENSE) · [Contributing](CONTRIBUTING.md) · [Code of Conduct](CODE_OF_CONDUCT.md)
 
@@ -12,11 +12,15 @@ Licence: [MIT](LICENSE) · [Contributing](CONTRIBUTING.md) · [Code of Conduct](
 
 ```
 .
-├── .devcontainer/      # Dev container config (VSCode / Zed)
+├── .devcontainer/        # Dev container config (VSCode / Zed)
+├── docs/adr/             # Architecture decision records
 ├── src/
-│   └── main.cpp        # Main entry point
+│   ├── main.cpp          # Main entry point
+│   ├── math/             # Vector, Ray
+│   └── geometry/         # Sphere, and future shapes
 ├── tests/
-│   └── test_main.cpp   # Catch2 unit tests
+│   ├── test_main.cpp     # Catch2 entry + smoke tests
+│   └── math/             # Tests for src/math
 └── CMakeLists.txt
 ```
 
@@ -103,10 +107,10 @@ make test
 ```
 </details>
 
-You should see:
+You should see all test cases pass, e.g.:
 
 ```
-All tests passed (2 assertions in 2 test cases)
+All tests passed (N assertions in M test cases)
 ```
 
 ---
@@ -116,14 +120,16 @@ All tests passed (2 assertions in 2 test cases)
 Tests live in `tests/`. Add a new `TEST_CASE` before writing the implementation, confirm it fails, then implement until it passes.
 
 ```cpp
-// tests/test_vec3.cpp  (example)
+// tests/math/test_vector.cpp  (example)
 #include <catch2/catch_test_macros.hpp>
-#include "vec3.h"
+#include <catch2/catch_approx.hpp>
+#include "math/vector.h"
 
-TEST_CASE("Vec3 dot product", "[vec3]") {
-    Vec3 a{1, 0, 0};
-    Vec3 b{0, 1, 0};
-    REQUIRE(dot(a, b) == 0.0f);
+TEST_CASE("Vector addition", "[vector]") {
+    Vector a(1, 0, 0);
+    Vector b(0, 1, 0);
+    Vector result = a + b;
+    REQUIRE(result.x() == Catch::Approx(1.0));
 }
 ```
 
@@ -142,12 +148,16 @@ Full docs: https://github.com/catchorg/Catch2/blob/devel/docs/tutorial.md
 
 ## Adding new source files
 
-1. Create `src/yourfile.cpp` and optionally `src/yourfile.h`.
-2. Add it to `CMakeLists.txt`:
+Library code (anything other than `main.cpp`) lives in the `raytracer_core`
+target, shared by both the `raytracer` executable and the `tests` binary —
+list each source file once and both pick it up:
+
+1. Create `src/yourmodule/yourfile.cpp` and `src/yourmodule/yourfile.h`.
+2. Add the `.cpp` to `raytracer_core` in `CMakeLists.txt`:
    ```cmake
-   target_sources(raytracer PRIVATE src/yourfile.cpp)
+   target_sources(raytracer_core PRIVATE src/yourmodule/yourfile.cpp)
    ```
-3. For tests, add a new `.cpp` under `tests/` and add it similarly to the `tests` target:
+3. For tests, add a new `.cpp` under `tests/` and add it to the `tests` target:
    ```cmake
-   target_sources(tests PRIVATE tests/test_yourfile.cpp)
+   target_sources(tests PRIVATE tests/yourmodule/test_yourfile.cpp)
    ```
