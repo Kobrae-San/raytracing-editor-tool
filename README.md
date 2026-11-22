@@ -35,43 +35,46 @@ does:
 
 ## Architecture
 
-Organised around SOLID so new shapes/materials plug in via interfaces without
-changing the renderer:
+Organised around SOLID so new shapes, materials and file formats plug in via
+interfaces without changing the renderer. See the
+[domain model](docs/domain/domain-model.md) and the
+[architecture decisions](docs/adr/).
 
 - **Maths** (`src/math/`): `Vector`, `Ray`
 - **Colour** (`src/colour/`): `Colour`
-- **Geometry** (`src/geometry/`): `Sphere`, `HitInfo` — more shapes later
-- **Scene** (`src/scene/`): `Light`
-- **Material** (`src/material/`): `Material` (Strategy interface), `FlatShader`,
-  `LambertShader`
-- **Rendering** (`src/render/`): `Camera` (ray generation + tracing)
-- **I/O** (`src/io/`): `ImageSaver` (Strategy interface), `PngSaver` (via
+- **Geometry** (`src/geometry/`): `Shape` (interface), `Sphere`, `Plane`, `HitInfo`
+- **Material** (`src/material/`): `Material` (interface), `LambertShader`, `FlatShader`
+- **Scene** (`src/scene/`): `Scene` (shapes + the sun's direction, nearest hit)
+- **Rendering** (`src/render/`): `Camera` (rays, pixel loop), `trace` (colour of a ray)
+- **Image** (`src/image/`): `Image` (pixel grid)
+- **I/O** (`src/io/`): `ImageSaver` (interface), `PngSaver` (via
   [LodePNG](https://github.com/lvandeve/lodepng), see
   [ADR 0005](docs/adr/0005-lodepng.md))
-- **Image** (`src/image/`): `Image` (pixel grid)
 
-`Material` and `ImageSaver` are abstract interfaces (Dependency Inversion): the
-renderer and `Image` depend on them, not on a concrete shader or file format,
-so adding e.g. a `GlassShader` or an `ExrSaver` later won't touch existing
-code.
+`Shape`, `Material` and `ImageSaver` are abstract interfaces: the renderer
+depends on them, not on a concrete shape, shader or file format, so adding a
+`Triangle`, a `GlassShader` or an `ExrSaver` won't touch existing code.
 
 ## Project structure
 
 ```
 .
 ├── .devcontainer/    # Dev container config (VSCode / Zed)
-├── docs/adr/         # Architecture decision records
+├── docs/
+│   ├── adr/          # Architecture decision records
+│   ├── discovery/    # Discovery report (m0)
+│   └── domain/       # Domain model (Mermaid)
 ├── src/
-│   ├── main.cpp      # Main entry point
+│   ├── main.cpp      # Builds the scene and renders image.png
 │   ├── math/         # Vector, Ray
 │   ├── colour/       # Colour
-│   ├── geometry/     # Sphere, HitInfo
-│   ├── scene/        # Light
-│   ├── material/     # Material, FlatShader, LambertShader
-│   ├── render/       # Camera
-│   ├── io/           # ImageSaver, PngSaver
-│   └── image/        # Image
-├── tests/            # Catch2 unit tests, mirroring src/
+│   ├── geometry/     # Shape, Sphere, Plane, HitInfo
+│   ├── material/     # Material, LambertShader, FlatShader
+│   ├── scene/        # Scene
+│   ├── render/       # Camera, trace
+│   ├── image/        # Image
+│   └── io/           # ImageSaver, PngSaver
+├── tests/            # Catch2 unit tests, mirroring src/ (+ test_helpers)
 └── CMakeLists.txt
 ```
 
@@ -138,12 +141,12 @@ cmake --build build
 
 ```bash
 make run
-# Hello, Raytracer!
+# Saved image.png
 ```
 
-The pieces above (`Camera`, `Sphere`, `Image`, `PngSaver`, ...) aren't wired
-together into an end-to-end render yet — each is tested in isolation, but
-`main.cpp` doesn't yet assemble a scene and write an image file.
+`main.cpp` renders a red ball standing on a grey floor, lit by the sun from
+the top left, at 400 × 300 pixels, and writes it to `image.png` in the current
+folder (ignored by git). There are no shadows yet: no shadow rays are cast.
 
 ---
 
@@ -176,17 +179,18 @@ Tests live in `tests/`, mirroring the `src/` layout. Add a new `TEST_CASE`
 before writing the implementation, confirm it fails, then implement until it
 passes.
 
+Expected values come from the maths (worked out on paper), never from
+running the code. Compare doubles within a tolerance with the helpers in
+`tests/test_helpers.h`:
+
 ```cpp
 // tests/math/test_vector.cpp  (example)
 #include <catch2/catch_test_macros.hpp>
-#include <catch2/catch_approx.hpp>
 #include "math/vector.h"
+#include "test_helpers.h"
 
 TEST_CASE("Vector addition", "[vector]") {
-    Vector a(1, 0, 0);
-    Vector b(0, 1, 0);
-    Vector result = a + b;
-    REQUIRE(result.x() == Catch::Approx(1.0));
+    requireVectorsEqual(Vector(3, 4, 1) + Vector(4, -3, 2), Vector(7, 1, 3));
 }
 ```
 
@@ -197,7 +201,7 @@ Useful Catch2 macros:
 | `REQUIRE(expr)` | Assert; stop test on failure |
 | `CHECK(expr)` | Assert; continue on failure |
 | `REQUIRE_THROWS(expr)` | Expect an exception |
-| `Catch::Approx(x).epsilon(e)` | Floating-point comparison |
+| `REQUIRE_THAT(x, WithinAbs(e, tolerance))` | Floating-point comparison |
 
 Full docs: https://github.com/catchorg/Catch2/blob/devel/docs/tutorial.md
 
