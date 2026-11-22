@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposed
+Accepted
 
 ## Context
 
@@ -14,7 +14,7 @@ catch some mistakes.
 ## Decision
 
 Keep one `Vector` class for both, as the client and the reference books
-(e.g. *Ray Tracing in One Weekend*) do. Names make the role explicit:
+(e.g. _Ray Tracing in One Weekend_) do. Names make the role explicit:
 `origin`, `center`, `point` for points; `direction`, `normal`, `toLight` for
 directions.
 

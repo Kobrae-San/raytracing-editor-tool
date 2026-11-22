@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposed
+Accepted
 
 ## Context
 
@@ -28,5 +28,5 @@ shapes can share one material; a `HitInfo` points to it without owning it.
 
 ## Rejected alternative
 
-Inheritance (a sphere *is a* material, or one subclass per pair): the number
+Inheritance (a sphere _is a_ material, or one subclass per pair): the number
 of classes multiplies, and a material can't be shared.

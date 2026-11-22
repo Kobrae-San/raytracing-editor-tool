@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposed
+Accepted
 
 ## Context
 
@@ -27,6 +27,6 @@ while "up" in the scene should be positive y.
 
 ## Rejected alternatives
 
-- Looking along −z (right-handed, as in *Ray Tracing in One Weekend*): common
+- Looking along −z (right-handed, as in _Ray Tracing in One Weekend_): common
   in graphics, but every scene would have negative depths.
 - Pixel (0, 0) at the bottom left: matches the world's y, but not image files.

@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposed
+Accepted
 
 ## Context
 
@@ -30,11 +30,13 @@ state without manual steps.
 ## Consequences
 
 **Positive:**
+
 - Every contributor uses the same compiler, CMake version, and Git, eliminating
   environment-related failures during the course.
 - New contributors are productive within minutes of cloning the repository.
 
 **Negative:**
+
 - Requires Docker to be installed and running; Docker Desktop licencing may
   be a constraint for some participants.
 - Container startup adds a one-time delay on first open.

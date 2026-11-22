@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposed
+Accepted
 
 ## Context
 
@@ -30,6 +30,7 @@ CTest automatically.
 ## Consequences
 
 **Positive:**
+
 - Works on all target platforms and integrates with VS Code (CMake Tools),
   CLion, Zed, and the terminal without extra configuration.
 - `FetchContent` keeps the repository self-contained: no external package
@@ -38,6 +39,7 @@ CTest automatically.
   used.
 
 **Negative:**
+
 - CMake's syntax is verbose and historically inconsistent; the learning curve
   can be steep for participants unfamiliar with it.
 - `FetchContent` downloads Catch2 on first configure, which requires internet
