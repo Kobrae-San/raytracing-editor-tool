@@ -1,26 +1,77 @@
-# Raytracing Live Demo 2026
+# raytracing-editor-tool
 
-A C++ raytracer built incrementally during the course, using TDD.
+A **CPU raytracer** written in **C++20** for a film studio that needs a
+renderer it fully owns: tested, documented, open to partner studios, and fast
+enough to render an entire movie. It's a deliberate alternative to closed
+commercial renderers (Arnold, RenderMan, V-Ray) with their recurring licences
+and vendor-driven roadmaps.
 
-[![CI](https://github.com/glassworks/raytracing-live-demo-2026/actions/workflows/ci.yml/badge.svg)](https://github.com/glassworks/raytracing-live-demo-2026/actions/workflows/ci.yml)
+See the full brief in [docs/discovery/discovery-report.md](docs/discovery/discovery-report.md).
+
+[![CI](https://github.com/Kobrae-San/raytracing-editor-tool/actions/workflows/ci.yml/badge.svg)](https://github.com/Kobrae-San/raytracing-editor-tool/actions/workflows/ci.yml)
 
 Licence: [MIT](LICENSE) · [Contributing](CONTRIBUTING.md) · [Code of Conduct](CODE_OF_CONDUCT.md)
 
 ---
 
+## Goals & constraints
+
+These shape every technical decision and are why the code looks the way it
+does:
+
+- **CPU-only rendering.** Performance comes from multithreading, an
+  acceleration structure (BVH) and cache-friendly code — not the GPU.
+- **Fast *and* high quality.** Quick previews for artists plus enough
+  throughput for a full film → adjustable preview/final modes.
+- **Reliable and explainable.** Correct images, with failures that can be
+  diagnosed. Hence automated tests (maths + reference images), benchmarks and
+  logging from day one. (Black artefacts usually trace back to NaN or
+  self-intersection — things tests must cover.)
+- **Extensible by partners.** Add shapes, materials and lights *without*
+  touching the core (Open/Closed). Needs docs, a contribution guide, CI and
+  code review.
+
+---
+
+## Architecture
+
+Organised around SOLID so new shapes/materials plug in via interfaces without
+changing the renderer:
+
+- **Maths** (`src/math/`): `Vector`, `Ray`
+- **Colour** (`src/colour/`): `Colour`
+- **Geometry** (`src/geometry/`): `Sphere`, `HitInfo` — more shapes later
+- **Scene** (`src/scene/`): `Light`
+- **Material** (`src/material/`): `Material` (Strategy interface), `FlatShader`,
+  `LambertShader`
+- **Rendering** (`src/render/`): `Camera` (ray generation + tracing)
+- **I/O** (`src/io/`): `ImageSaver` (Strategy interface), `PngSaver` (via
+  [LodePNG](https://github.com/lvandeve/lodepng), see
+  [ADR 0005](docs/adr/0005-lodepng.md))
+- **Image** (`src/image/`): `Image` (pixel grid)
+
+`Material` and `ImageSaver` are abstract interfaces (Dependency Inversion): the
+renderer and `Image` depend on them, not on a concrete shader or file format,
+so adding e.g. a `GlassShader` or an `ExrSaver` later won't touch existing
+code.
+
 ## Project structure
 
 ```
 .
-├── .devcontainer/        # Dev container config (VSCode / Zed)
-├── docs/adr/             # Architecture decision records
+├── .devcontainer/    # Dev container config (VSCode / Zed)
+├── docs/adr/         # Architecture decision records
 ├── src/
-│   ├── main.cpp          # Main entry point
-│   ├── math/             # Vector, Ray
-│   └── geometry/         # Sphere, and future shapes
-├── tests/
-│   ├── test_main.cpp     # Catch2 entry + smoke tests
-│   └── math/             # Tests for src/math
+│   ├── main.cpp      # Main entry point
+│   ├── math/         # Vector, Ray
+│   ├── colour/       # Colour
+│   ├── geometry/     # Sphere, HitInfo
+│   ├── scene/        # Light
+│   ├── material/     # Material, FlatShader, LambertShader
+│   ├── render/       # Camera
+│   ├── io/           # ImageSaver, PngSaver
+│   └── image/        # Image
+├── tests/            # Catch2 unit tests, mirroring src/
 └── CMakeLists.txt
 ```
 
@@ -36,7 +87,7 @@ Requires [Docker](https://www.docker.com/) and either:
 
 1. Open the repository folder in VS Code or Zed.
 2. When prompted, click **"Reopen in Container"** (VS Code) or **"Use Dev Container"** (Zed).
-3. The container image provides GCC, CMake ≥ 3.20, and Git. Catch2 is downloaded automatically at first build.
+3. The container image provides GCC, CMake ≥ 3.20, and Git. Catch2 and LodePNG are downloaded automatically at first build.
 4. CMake configures and builds automatically on container creation (`postCreateCommand`).
 
 ### Option B — Native (macOS / Linux / Windows)
@@ -83,12 +134,16 @@ cmake --build build
 
 ---
 
-## Running the Hello World demo
+## Running the demo
 
 ```bash
 make run
 # Hello, Raytracer!
 ```
+
+The pieces above (`Camera`, `Sphere`, `Image`, `PngSaver`, ...) aren't wired
+together into an end-to-end render yet — each is tested in isolation, but
+`main.cpp` doesn't yet assemble a scene and write an image file.
 
 ---
 
@@ -117,7 +172,9 @@ All tests passed (N assertions in M test cases)
 
 ## Test-driven development workflow
 
-Tests live in `tests/`. Add a new `TEST_CASE` before writing the implementation, confirm it fails, then implement until it passes.
+Tests live in `tests/`, mirroring the `src/` layout. Add a new `TEST_CASE`
+before writing the implementation, confirm it fails, then implement until it
+passes.
 
 ```cpp
 // tests/math/test_vector.cpp  (example)
@@ -161,3 +218,12 @@ list each source file once and both pick it up:
    ```cmake
    target_sources(tests PRIVATE tests/yourmodule/test_yourfile.cpp)
    ```
+
+---
+
+## Architecture decisions
+
+Significant build/tooling decisions are recorded as ADRs in
+[`docs/adr/`](docs/adr/) (dev container, CMake, Catch2, GitHub Actions CI,
+LodePNG). See [AGENTS.md](AGENTS.md) for the rules on reading and proposing
+ADRs before changing build, tooling or test setup.
