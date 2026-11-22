@@ -16,5 +16,5 @@ Colour LambertShader::shade(const HitInfo& hit, const Light& light) const {
         brightness = 0.0;
     }
 
-    return _colour * brightness;
+    return brightness * _colour;
 }

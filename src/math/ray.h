@@ -1,6 +1,6 @@
 #pragma once
 
-#include "vector.h"
+#include "math/vector.h"
 
 // A ray is a half-line: it starts at a point (origin) and travels in a
 // direction. It is the core thing a raytracer shoots through a scene.

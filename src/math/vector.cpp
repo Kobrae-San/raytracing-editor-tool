@@ -1,4 +1,4 @@
-#include "vector.h"
+#include "math/vector.h"
 
 #include <cmath>
 
@@ -26,10 +26,6 @@ Vector Vector::operator-(const Vector& other) const {
     return Vector(_x - other._x, _y - other._y, _z - other._z);
 }
 
-Vector Vector::operator*(double scalar) const {
-    return Vector(_x * scalar, _y * scalar, _z * scalar);
-}
-
 double Vector::dot(const Vector& other) const {
     return _x * other._x + _y * other._y + _z * other._z;
 }
@@ -39,6 +35,9 @@ double Vector::length() const {
 }
 
 Vector Vector::normalised() const {
-    double len = length();
-    return Vector(_x / len, _y / len, _z / len);
+    return (1.0 / length()) * *this;
+}
+
+Vector operator*(double t, const Vector& vector) {
+    return Vector(t * vector.x(), t * vector.y(), t * vector.z());
 }

@@ -1,4 +1,4 @@
-#include "colour.h"
+#include "colour/colour.h"
 
 Colour::Colour(double r, double g, double b)
     : _r(r), _g(g), _b(b) {
@@ -16,6 +16,6 @@ double Colour::b() const {
     return _b;
 }
 
-Colour Colour::operator*(double scalar) const {
-    return Colour(_r * scalar, _g * scalar, _b * scalar);
+Colour operator*(double t, const Colour& colour) {
+    return Colour(t * colour.r(), t * colour.g(), t * colour.b());
 }

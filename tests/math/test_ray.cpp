@@ -1,15 +1,18 @@
 #include <catch2/catch_test_macros.hpp>
-#include <catch2/catch_approx.hpp>
 
 #include "math/ray.h"
+#include "test_helpers.h"
 
-TEST_CASE("Ray at() finds the point travelled along the ray", "[ray]") {
-    Ray ray(Vector(0, 0, 0), Vector(1, 2, 3));
+TEST_CASE("Ray holds its origin and direction", "[ray]") {
+    Ray ray(Vector(1, 2, 3), Vector(3, 4, 0));
 
-    Vector point = ray.at(2.0);
+    requireVectorsEqual(ray.origin(), Vector(1, 2, 3));
+    requireVectorsEqual(ray.direction(), Vector(3, 4, 0));
+}
 
-    // origin + direction * t = (0,0,0) + (1,2,3) * 2 = (2,4,6)
-    REQUIRE(point.x() == Catch::Approx(2.0));
-    REQUIRE(point.y() == Catch::Approx(4.0));
-    REQUIRE(point.z() == Catch::Approx(6.0));
+TEST_CASE("Ray at(t) is the point O + t * D", "[ray]") {
+    Ray ray(Vector(0, 8, 0), Vector(3, -4, 0));
+
+    requireVectorsEqual(ray.at(0.0), Vector(0, 8, 0));
+    requireVectorsEqual(ray.at(2.0), Vector(6, 0, 0));
 }

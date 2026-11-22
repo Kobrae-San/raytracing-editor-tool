@@ -1,39 +1,45 @@
 #include <catch2/catch_test_macros.hpp>
-#include <catch2/catch_approx.hpp>
+#include <catch2/matchers/catch_matchers_floating_point.hpp>
 
 #include "math/vector.h"
+#include "test_helpers.h"
+
+using Catch::Matchers::WithinAbs;
 
 TEST_CASE("Vector addition", "[vector]") {
-    Vector a(1, 2, 3);
-    Vector b(4, 5, 6);
-
-    Vector result = a + b;
-
-    // (1, 2, 3) + (4, 5, 6) = (5, 7, 9)
-    REQUIRE(result.x() == Catch::Approx(5.0));
-    REQUIRE(result.y() == Catch::Approx(7.0));
-    REQUIRE(result.z() == Catch::Approx(9.0));
+    requireVectorsEqual(Vector(3, 4, 0) + Vector(4, -3, 0), Vector(7, 1, 0));
+    requireVectorsEqual(Vector(3, 4, 1) + Vector(4, -3, 2), Vector(7, 1, 3));
 }
 
 TEST_CASE("Vector subtraction", "[vector]") {
-    Vector a(-1, 4, 0);
-    Vector b(-5, 2, 1);
+    requireVectorsEqual(Vector(4, 5, 0) - Vector(1, 1, 0), Vector(3, 4, 0));
+    requireVectorsEqual(Vector(-1, 4, 0) - Vector(-5, 2, 1), Vector(4, 2, -1));
+}
 
-    Vector result = a - b;
+TEST_CASE("Vector scaled by a number", "[vector]") {
+    requireVectorsEqual(2.0 * Vector(3, -4, 1), Vector(6, -8, 2));
+}
 
-    // (-1, 4, 0) - (-5, 2, 1) = (4, 2, -1)
-    REQUIRE(result.x() == Catch::Approx(4.0));
-    REQUIRE(result.y() == Catch::Approx(2.0));
-    REQUIRE(result.z() == Catch::Approx(-1.0));
+TEST_CASE("Ray equation O + t * D", "[vector]") {
+    Vector origin(0, 8, 0);
+    Vector direction(3, -4, 0);
+
+    requireVectorsEqual(origin + 2.0 * direction, Vector(6, 0, 0));
+}
+
+TEST_CASE("Vector dot product", "[vector]") {
+    // Whole numbers: exact comparison is safe here.
+    REQUIRE(Vector(3, 4, 0).dot(Vector(4, 3, 0)) == 24.0);
+    REQUIRE(Vector(3, 4, 0).dot(Vector(4, -3, 0)) == 0.0);
+    REQUIRE(Vector(3, 4, 12).dot(Vector(4, 3, 1)) == 36.0);
+}
+
+TEST_CASE("Vector length", "[vector]") {
+    REQUIRE(Vector(3, -4, 0).length() == 5.0);
+    REQUIRE(Vector(3, 4, 12).length() == 13.0);
 }
 
 TEST_CASE("Vector normalised", "[vector]") {
-    Vector a(3, 4, 0);
-
-    Vector result = a.normalised();
-
-    // length of (3, 4, 0) is 5, so normalised = (3/5, 4/5, 0)
-    REQUIRE(result.x() == Catch::Approx(3.0 / 5.0));
-    REQUIRE(result.y() == Catch::Approx(4.0 / 5.0));
-    REQUIRE(result.z() == Catch::Approx(0.0));
+    requireVectorsEqual(Vector(3, -4, 0).normalised(), Vector(0.6, -0.8, 0));
+    REQUIRE_THAT(Vector(3, 4, 12).normalised().length(), WithinAbs(1.0, tolerance));
 }

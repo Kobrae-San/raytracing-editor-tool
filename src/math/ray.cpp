@@ -1,4 +1,4 @@
-#include "ray.h"
+#include "math/ray.h"
 
 Ray::Ray(const Vector& origin, const Vector& direction)
     : _origin(origin), _direction(direction) {
@@ -13,5 +13,5 @@ const Vector& Ray::direction() const {
 }
 
 Vector Ray::at(double t) const {
-    return _origin + _direction * t;
+    return _origin + t * _direction;
 }
