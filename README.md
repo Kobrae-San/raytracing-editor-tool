@@ -8,13 +8,15 @@ and vendor-driven roadmaps.
 
 See the full brief in [docs/discovery/discovery-report.md](docs/discovery/discovery-report.md).
 
-This repository is currently the **project skeleton**: a cross-platform build,
-a Hello World demo, and a test setup ready for TDD. The raytracing itself comes
-next.
+[![CI](https://github.com/Kobrae-San/raytracing-editor-tool/actions/workflows/ci.yml/badge.svg)](https://github.com/Kobrae-San/raytracing-editor-tool/actions/workflows/ci.yml)
+
+Licence: [MIT](LICENSE) · [Contributing](CONTRIBUTING.md) · [Code of Conduct](CODE_OF_CONDUCT.md)
+
+---
 
 ## Goals & constraints
 
-These shape every technical decision and are why the skeleton looks the way it
+These shape every technical decision and are why the code looks the way it
 does:
 
 - **CPU-only rendering.** Performance comes from multithreading, an
@@ -28,131 +30,204 @@ does:
 - **Extensible by partners.** Add shapes, materials and lights *without*
   touching the core (Open/Closed). Needs docs, a contribution guide, CI and
   code review.
-- **Deadline:** first delivery targeted for **5 January**.
 
-## Planned architecture
+---
 
-The core is organised around SOLID so new shapes/materials plug in via
-interfaces without changing the renderer:
+## Architecture
 
-- **Maths:** `Vec3`, `Ray`
-- **Scene:** `Shape` (Sphere, Plane, Mesh), `Material` (Diffuse, Metal, Glass),
-  `Light`, `Camera`, `Scene`
-- **Rendering:** `Renderer`, `Sampler`, `BVH`
-- **I/O:** `SceneLoader`, `Image`, `ImageWriter`
+Organised around SOLID so new shapes, materials and file formats plug in via
+interfaces without changing the renderer. See the
+[domain model](docs/domain/domain-model.md) and the
+[architecture decisions](docs/adr/).
 
-The current `rt_core` library (just `rt::greeting` for now) is the seed this
-grows into.
+- **Maths** (`src/math/`): `Vector`, `Ray`
+- **Colour** (`src/colour/`): `Colour`
+- **Geometry** (`src/geometry/`): `Shape` (interface), `Sphere`, `Plane`, `HitInfo`
+- **Material** (`src/material/`): `Material` (interface), `LambertShader`, `FlatShader`
+- **Scene** (`src/scene/`): `Scene` (shapes + the sun's direction, nearest hit)
+- **Rendering** (`src/render/`): `Camera` (rays, pixel loop), `trace` (colour of a ray)
+- **Image** (`src/image/`): `Image` (pixel grid)
+- **I/O** (`src/io/`): `ImageSaver` (interface), `PngSaver` (via
+  [LodePNG](https://github.com/lvandeve/lodepng), see
+  [ADR 0005](docs/adr/0005-lodepng.md))
 
-## Layout
+`Shape`, `Material` and `ImageSaver` are abstract interfaces: the renderer
+depends on them, not on a concrete shape, shader or file format, so adding a
+`Triangle`, a `GlassShader` or an `ExrSaver` won't touch existing code.
+
+## Project structure
 
 ```
 .
-├── CMakeLists.txt         # Top-level build: defines the rt_core lib + app
-├── CMakePresets.json      # One-command configure/build/test presets
-├── .devcontainer/         # Reproducible toolchain (VSCode / Zed / CLI)
-├── include/core/          # Public headers
-├── src/                   # main.cpp (app) + core/ (library sources)
-└── tests/                 # GoogleTest unit tests
+├── .devcontainer/    # Dev container config (VSCode / Zed)
+├── docs/
+│   ├── adr/          # Architecture decision records
+│   ├── discovery/    # Discovery report (m0)
+│   └── domain/       # Domain model (Mermaid)
+├── src/
+│   ├── main.cpp      # Builds the scene and renders image.png
+│   ├── math/         # Vector, Ray
+│   ├── colour/       # Colour
+│   ├── geometry/     # Shape, Sphere, Plane, HitInfo
+│   ├── material/     # Material, LambertShader, FlatShader
+│   ├── scene/        # Scene
+│   ├── render/       # Camera, trace
+│   ├── image/        # Image
+│   └── io/           # ImageSaver, PngSaver
+├── tests/            # Catch2 unit tests, mirroring src/ (+ test_helpers)
+└── CMakeLists.txt
 ```
 
-The actual logic lives in a library (`rt_core`) and the executable
-(`raytracer`) is a thin wrapper around it. Tests link against the library, so
-every piece of behaviour can be tested in isolation — this is what makes TDD
-work.
+---
 
-## Cross-platform strategy
-
-We rely on two things so the project builds the same everywhere (Linux, macOS,
-Windows):
-
-1. **CMake** as the build system — it generates native build files for any
-   compiler/IDE (GCC, Clang, MSVC, Ninja, Make, Visual Studio…).
-2. **A dev container** (`.devcontainer/`) — a pinned Ubuntu image with CMake,
-   Ninja, GCC and Clang preinstalled. This is the recommended way to work: it
-   guarantees everyone has the exact same toolchain, no manual setup.
-
-Dependencies (currently just GoogleTest) are fetched automatically at configure
-time via CMake's `FetchContent` — nothing to install by hand.
-
-## Getting started
+## Cross-platform setup
 
 ### Option A — Dev container (recommended)
 
-Requires [Docker](https://www.docker.com/) and an editor with dev-container
-support.
+Requires [Docker](https://www.docker.com/) and either:
+- **VS Code** with the [Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension, or
+- **Zed** with its built-in dev container support.
 
-- **VSCode:** install the *Dev Containers* extension, open the folder, and run
-  **"Dev Containers: Reopen in Container"**.
-- **Zed / other:** use the [Dev Container CLI](https://github.com/devcontainers/cli):
-  ```sh
-  devcontainer up --workspace-folder .
-  devcontainer exec --workspace-folder . bash
-  ```
+1. Open the repository folder in VS Code or Zed.
+2. When prompted, click **"Reopen in Container"** (VS Code) or **"Use Dev Container"** (Zed).
+3. The container image provides GCC, CMake ≥ 3.20, and Git. Catch2 and LodePNG are downloaded automatically at first build.
+4. CMake configures and builds automatically on container creation (`postCreateCommand`).
 
-Once inside the container, follow the build commands below.
+### Option B — Native (macOS / Linux / Windows)
 
-### Option B — Local toolchain
+Prerequisites:
+| Tool | Minimum version |
+|------|----------------|
+| CMake | 3.20 |
+| C++ compiler | GCC 12 / Clang 15 / MSVC 19.34 (C++20) |
+| Git | any recent |
 
-Install **CMake ≥ 3.20**, **Ninja**, and a C++20 compiler.
+---
 
-| Platform | Install |
-| -------- | ------- |
-| Ubuntu/Debian | `sudo apt install cmake ninja-build g++` |
-| macOS (Homebrew) | `brew install cmake ninja` (Xcode CLT for the compiler) |
-| Windows | Install CMake + Visual Studio 2022 (MSVC), or use the dev container |
+## Common commands
 
-## Build & run the demo
+| Command | What it does |
+|---------|-------------|
+| `make build` | Configure + compile everything |
+| `make run` | Build then launch the raytracer |
+| `make test` | Build then run the test suite |
+| `make clean` | Delete the `build/` directory |
 
-From the project root:
+`run` and `test` both depend on `build`, so they recompile automatically if sources have changed.
 
-```sh
-# Configure (downloads GoogleTest the first time) + build
-cmake --preset default
-cmake --build --preset default
+---
+
+## Building
+
+```bash
+make build
 ```
 
-Run the Hello World app:
+<details>
+<summary>Raw CMake (if you prefer)</summary>
 
-```sh
-./build/bin/raytracer      # Windows: .\build\bin\raytracer.exe
+```bash
+# Configure (only needed once, or after changing CMakeLists.txt)
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+
+# Build everything (main binary + test binary)
+cmake --build build
+```
+</details>
+
+---
+
+## Running the demo
+
+```bash
+make run
+# Saved image.png
 ```
 
-Expected output:
+`main.cpp` renders a red ball standing on a grey floor, lit by the sun from
+the top left, at 400 × 300 pixels, and writes it to `image.png` in the current
+folder (ignored by git). There are no shadows yet: no shadow rays are cast.
 
-```
-Hello, Raytracer!
-```
+---
 
-> Prefer a GUI? With the **CMake Tools** extension (bundled in the dev
-> container) just hit *Configure*, then *Build*, then *Run* from the status bar.
+## Running the tests
 
-## Testing & TDD
-
-Tests use [GoogleTest](https://google.github.io/googletest/). Run the whole
-suite with CTest:
-
-```sh
-ctest --preset default
+```bash
+make test
 ```
 
-Or run the test binary directly for more detailed output:
+<details>
+<summary>More verbose output</summary>
 
-```sh
-./build/bin/rt_tests
+```bash
+# Run the test binary directly for Catch2's reporter
+./build/tests --reporter compact
+```
+</details>
+
+You should see all test cases pass, e.g.:
+
+```
+All tests passed (N assertions in M test cases)
 ```
 
-### The TDD loop
+---
 
-1. **Write a failing test** in `tests/` (add a `TEST(...)` or a new
-   `*_test.cpp` — register new files in [tests/CMakeLists.txt](tests/CMakeLists.txt)).
-2. **Run the tests** and watch the new one fail (`ctest --preset default`).
-3. **Write the minimum code** in `include/core/` + `src/core/` to make it pass.
-4. **Re-run** until green, then **refactor** with the tests as your safety net.
+## Test-driven development workflow
 
-See [tests/greeting_test.cpp](tests/greeting_test.cpp) for a worked example that
-tests the `rt::greeting` function from the core library.
+Tests live in `tests/`, mirroring the `src/` layout. Add a new `TEST_CASE`
+before writing the implementation, confirm it fails, then implement until it
+passes.
 
-## License
+Expected values come from the maths (worked out on paper), never from
+running the code. Compare doubles within a tolerance with the helpers in
+`tests/test_helpers.h`:
 
-Student project — add a license before any public release.
+```cpp
+// tests/math/test_vector.cpp  (example)
+#include <catch2/catch_test_macros.hpp>
+#include "math/vector.h"
+#include "test_helpers.h"
+
+TEST_CASE("Vector addition", "[vector]") {
+    requireVectorsEqual(Vector(3, 4, 1) + Vector(4, -3, 2), Vector(7, 1, 3));
+}
+```
+
+Useful Catch2 macros:
+
+| Macro | Purpose |
+|-------|---------|
+| `REQUIRE(expr)` | Assert; stop test on failure |
+| `CHECK(expr)` | Assert; continue on failure |
+| `REQUIRE_THROWS(expr)` | Expect an exception |
+| `REQUIRE_THAT(x, WithinAbs(e, tolerance))` | Floating-point comparison |
+
+Full docs: https://github.com/catchorg/Catch2/blob/devel/docs/tutorial.md
+
+---
+
+## Adding new source files
+
+Library code (anything other than `main.cpp`) lives in the `raytracer_core`
+target, shared by both the `raytracer` executable and the `tests` binary —
+list each source file once and both pick it up:
+
+1. Create `src/yourmodule/yourfile.cpp` and `src/yourmodule/yourfile.h`.
+2. Add the `.cpp` to `raytracer_core` in `CMakeLists.txt`:
+   ```cmake
+   target_sources(raytracer_core PRIVATE src/yourmodule/yourfile.cpp)
+   ```
+3. For tests, add a new `.cpp` under `tests/` and add it to the `tests` target:
+   ```cmake
+   target_sources(tests PRIVATE tests/yourmodule/test_yourfile.cpp)
+   ```
+
+---
+
+## Architecture decisions
+
+Significant build/tooling decisions are recorded as ADRs in
+[`docs/adr/`](docs/adr/) (dev container, CMake, Catch2, GitHub Actions CI,
+LodePNG). See [AGENTS.md](AGENTS.md) for the rules on reading and proposing
+ADRs before changing build, tooling or test setup.
