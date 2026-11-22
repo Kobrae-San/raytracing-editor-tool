@@ -26,12 +26,14 @@ add_library(raytracer_core STATIC
   src/colour/colour.cpp
   src/math/ray.cpp
   src/geometry/sphere.cpp
+  src/geometry/plane.cpp
   src/render/camera.cpp
+  src/render/trace.cpp
   src/io/png_saver.cpp
   src/material/flat_shader.cpp
   src/material/lambert_shader.cpp
   src/image/image.cpp
-  src/scene/light.cpp)
+  src/scene/scene.cpp)
 target_include_directories(raytracer_core PUBLIC src)
 target_link_libraries(raytracer_core PRIVATE lodepng)
 
@@ -62,7 +64,11 @@ add_executable(tests
   tests/image/test_image.cpp
   tests/io/test_png_saver.cpp
   tests/render/test_camera.cpp
-  tests/geometry/test_sphere.cpp)
+  tests/render/test_trace.cpp
+  tests/geometry/test_sphere.cpp
+  tests/geometry/test_plane.cpp
+  tests/material/test_material.cpp
+  tests/scene/test_scene.cpp)
 target_include_directories(tests PRIVATE tests)
 target_link_libraries(tests PRIVATE raytracer_core lodepng Catch2::Catch2WithMain)
 target_compile_options(tests PRIVATE ${RT_WARNINGS})

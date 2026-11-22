@@ -2,14 +2,13 @@
 
 #include "material/material.h"
 
-// Lambertian (diffuse) shading: the surface's base colour is scaled by the
-// dot product of the surface normal and the direction to the light, so
-// surfaces facing the light appear brighter than surfaces facing away.
+// Lambert's law: brightness = max(0, N . L), the cosine of the angle between
+// the surface normal and the direction to the light.
 class LambertShader : public Material {
 public:
-    LambertShader(const Colour& colour);
+    explicit LambertShader(const Colour& colour);
 
-    Colour shade(const HitInfo& hit, const Light& light) const override;
+    Colour shade(const HitInfo& hit, const Vector& toLight) const override;
 
 private:
     Colour _colour;

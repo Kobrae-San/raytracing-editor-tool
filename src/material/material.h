@@ -2,14 +2,15 @@
 
 #include "colour/colour.h"
 #include "geometry/hit_info.h"
-#include "scene/light.h"
+#include "math/vector.h"
 
-// Interface for calculating the final colour of a shaded surface.
-// Concrete implementations (e.g. FlatShader, LambertShader) decide how,
-// using where/how the surface was hit and the light illuminating it.
+// Strategy interface: how a surface takes the light. A shape has a material
+// and delegates its shading to it (ADR 0011), so a new kind of material
+// (mirror, glass) is a new class that no shape has to know about.
 class Material {
 public:
     virtual ~Material() = default;
 
-    virtual Colour shade(const HitInfo& hit, const Light& light) const = 0;
+    // toLight and hit.normal must both be unit vectors.
+    virtual Colour shade(const HitInfo& hit, const Vector& toLight) const = 0;
 };

@@ -1,32 +1,30 @@
 #pragma once
 
-#include "colour/colour.h"
-#include "geometry/sphere.h"
+#include "image/image.h"
 #include "math/ray.h"
 #include "math/vector.h"
-#include "scene/light.h"
+#include "scene/scene.h"
 
-// A camera: a point in the scene that rays are shot from. For now it always
-// faces the positive Z-axis; a direction will be added later.
+// A pinhole camera: an eye and a screen. For each pixel, it sends a ray from
+// the eye through the centre of that pixel on the screen. The screen faces
+// the z axis for now (x right, y up, z forward, see ADR 0009).
 class Camera {
 public:
-    Camera(const Vector& position);
+    Camera(const Vector& eye, const Vector& screenCentre, double screenWidth);
 
-    // Read-only access to the position.
-    const Vector& position() const;
+    const Vector& eye() const;
 
-    // The ray that leaves the camera and passes through the centre of the
-    // screen for pixel (pixelX, pixelY) of an image of imageWidth by
-    // imageHeight pixels, mapped onto a screen plane screenWidth units wide
-    // (screen height follows the image's aspect ratio).
-    Ray rayThroughPixel(unsigned int pixelX, unsigned int pixelY,
-                         unsigned int imageWidth, unsigned int imageHeight,
-                         double screenWidth) const;
+    // The ray through the centre of pixel (column, row) of a width x height
+    // image, counted from the top-left corner. The screen's height follows
+    // the image's aspect ratio. The direction is not normalised.
+    Ray rayThroughPixel(unsigned int column, unsigned int row,
+                        unsigned int width, unsigned int height) const;
 
-    // The colour seen along ray: the sphere's material's shaded colour,
-    // lit by light, if the ray hits it, black otherwise.
-    Colour trace(const Ray& ray, const Sphere& sphere, const Light& light) const;
+    // One traced ray per pixel.
+    Image render(const Scene& scene, unsigned int width, unsigned int height) const;
 
 private:
-    Vector _position;
+    Vector _eye;
+    Vector _screenCentre;
+    double _screenWidth;
 };
